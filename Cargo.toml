@@ -11,4 +11,4 @@ keywords = ["unity", "il2cpp", "game-development"]
 categories = ["game-development", "external-ffi-bindings"]
 
 [build-dependencies]
-bindgen = "0.71.1"
+bindgen = "0.72.1"

@@ -1,5 +1,5 @@
 use std::io::Cursor;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::{env, fs};
 
 fn main() {
@@ -14,13 +14,13 @@ fn main() {
     println!("cargo:rerun-if-env-changed=UNITY_VERSION");
     println!("cargo:rerun-if-env-changed=UNITY_DLL_NAME");
 
-    let header_path = format!("include/headers/{unity_version}.h");
-    let api_path = format!("include/api/{unity_version}.h");
+    let header_path = Path::new("include/headers").join(format!("{unity_version}.h"));
+    let api_path = Path::new("include/api").join(format!("{unity_version}.h"));
 
     for path in &[&header_path, &api_path] {
         if !fs::exists(path).unwrap() {
             panic!(
-                "Unity version \"{unity_version}\" is not supported (missing file: \"{path}\").\n\
+                "Unity version \"{unity_version}\" is not supported (missing file: {path:?}).\n\
                 Try using the closest version possible or verify the file paths.\n\
                 Versions list can be found at https://unity.com/releases/editor/archive",
             );
@@ -31,8 +31,8 @@ fn main() {
         .clang_args(["-include", "stdint.h"])
         .clang_args(["-include", "stdbool.h"])
         .clang_args(["-D", "DO_API(r, n, p) = r n p;"])
-        .header(header_path)
-        .header(api_path)
+        .header(header_path.to_str().unwrap())
+        .header(api_path.to_str().unwrap())
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
         .expect("Failed to generate bindings");
@@ -56,10 +56,6 @@ unsafe extern "C" {{"#
     );
 
     if let Err(err) = fs::write(&output_path, output_str) {
-        panic!(
-            "Failed to write bindings to \"{}\" {:?}",
-            output_path.display(),
-            err
-        )
+        panic!("Failed to write bindings to {output_path:?} {err:?}")
     }
 }
